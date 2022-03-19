@@ -111,13 +111,19 @@ class DataThread (threading.Thread):
         montage = make_standard_montage('standard_1020')
         raw.set_montage(montage)
         raw.save("raw_eeg.fif", overwrite=True)
-        
+        print("chau!!!")
+
 
 class StartCalibracionWindow(Screen):
-    
+            
     def animate_it(self, *args):
-        #print("Print: ", self.ids.bar)
-        
+        animate = self.my_animation(self.ids.bar)
+        animate.bind(on_start=lambda x,y:self.on_recording(),
+                     on_complete=lambda x,y:self.on_stopping() )
+        animate.start(self.ids.bar)
+
+    def on_recording(self):
+        print("--on_recoring--")
         #Calculamos name del directorio nuevo.
         path='DATA/T4'
         #Creamos directorio
@@ -129,27 +135,19 @@ class StartCalibracionWindow(Screen):
         params.serial_port = '/dev/ttyUSB0'
         board_id = BoardIds.CYTON_BOARD.value
         
-        board = BoardShim(board_id, params)
-        board.prepare_session()
-        board.start_stream()
-        
-        data_thead = DataThread(board, board_id, path)
-        data_thead.start()
-        try:
-            #time.sleep(60)
-            animate = self.my_animation(self.ids.bar)
-            animate.bind(on_complete=self.my_callback)    
-            animate.start(self.ids.bar)
-        finally:
-#            data_thead.labels=labels
-            data_thead.keep_alive = False
-            data_thead.join()
-            
-        board.stop_stream()
-        board.release_session()        
+        self.board = BoardShim(board_id, params)
+        self.board.prepare_session()
+        self.board.start_stream()        
+        self.data_thead = DataThread(self.board, board_id, path)
+        self.data_thead.start()
 
-    def my_callback(self, *args):
-        print("Volvi!!!")  
+    
+    def on_stopping(self):
+        print("--on_stopping--")
+        self.data_thead.keep_alive = False
+        self.data_thead.join()
+        self.board.stop_stream()
+        self.board.release_session()
                 
         
     def my_animation(self, in_widget, *args):
@@ -176,7 +174,6 @@ class StartCalibracionWindow(Screen):
                     animate = self.derecha(animate)
             animate = self.pausa(animate)
         return animate
-
 
 
     def derecha(self, animate):

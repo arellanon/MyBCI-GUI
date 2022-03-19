@@ -31,7 +31,7 @@ from libb import *
 def main():   
     low_freq, high_freq = 7., 30.
     
-    raw = mne.io.read_raw_fif("eeg.fif")
+    raw = mne.io.read_raw_fif("raw_eeg.fif")
     
     #sample_data_events_file = os.path.join(sample_data_folder, 'MEG', 'sample','sample_audvis_raw-eve.fif')
     #events_from_file = mne.read_events("event.fif")

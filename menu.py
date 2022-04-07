@@ -13,6 +13,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.animation import Animation
 import os
 from libb import *
+from datetime import datetime
 
 """
 DataThread
@@ -49,6 +50,30 @@ class RealtimeWindow(Screen):
 class ConfiguracionCalibracionWindow(Screen):
     pass
 
+
+class LabelTime (threading.Thread):
+    def __init__(self, stack, time):
+        threading.Thread.__init__ (self)
+        self.stack = stack
+        self.time = time
+        print("--inicio--")
+        print(self.stack)
+        
+    def run(self):
+        labels=None
+        #time.sleep(self.time//2)
+        for x in self.stack:
+            ts = time.time()
+            print(x, ' ', ts, ' - ', datetime.fromtimestamp(ts))
+            label=np.array( [ [ts], [x] ] )
+            if labels is None:
+                labels = label
+            else:
+                labels = np.append(labels, label, axis=1)
+            #print("paso.. ", x, " - time: ", self.time, ts)
+            time.sleep(self.time)
+        return labels
+            
 class DataThread (threading.Thread):
     def __init__ (self, board, board_id, path):
         threading.Thread.__init__ (self)
@@ -117,13 +142,20 @@ class DataThread (threading.Thread):
 class StartCalibracionWindow(Screen):
             
     def animate_it(self, *args):
+        #self.on_recording()
         animate = self.my_animation(self.ids.bar)
         animate.bind(on_start=lambda x,y:self.on_recording(),
                      on_complete=lambda x,y:self.on_stopping() )
+        #animate.bind( on_complete=lambda x,y:self.on_stopping() )
         animate.start(self.ids.bar)
 
     def on_recording(self):
         print("--on_recoring--")
+        label = LabelTime(self.stack, self.time_trial)
+        label.start()
+        ret=label.join()
+        print(ret)
+        """
         #Calculamos name del directorio nuevo.
         path='DATA/T4'
         #Creamos directorio
@@ -140,34 +172,41 @@ class StartCalibracionWindow(Screen):
         self.board.start_stream()        
         self.data_thead = DataThread(self.board, board_id, path)
         self.data_thead.start()
-
+        """
     
     def on_stopping(self):
         print("--on_stopping--")
+        """
         self.data_thead.keep_alive = False
         self.data_thead.join()
         self.board.stop_stream()
         self.board.release_session()
-                
+        """
+
+    def on_rigth(self):
+        print("--on_rigth--")                
+        
+    def on_left(self):
+        print("--on_left--")         
         
     def my_animation(self, in_widget, *args):
         self.time_trial = 8
         self.run_n = 1
         self.trial_per_run = 4
         self.time_pause = 10
+        self.stack = []
         
-        animate = Animation()        
+        animate = Animation(duration=0)        
         for i in range(self.run_n):
             print('\nCorrida N#: ', i)
             #Se crea lista de stack
-            stack = []
             left  = [0] * (self.trial_per_run // 2)
             rigth = [1] * (self.trial_per_run // 2)
-            stack = left + rigth
+            self.stack = left + rigth
             #print(stack)
-            random.shuffle(stack)
-            print(stack)
-            for x in stack:
+            random.shuffle(self.stack)
+            print(self.stack)
+            for x in self.stack:
                 if x == 0:
                     animate = self.izquierda(animate)
                 else:
@@ -175,26 +214,26 @@ class StartCalibracionWindow(Screen):
             animate = self.pausa(animate)
         return animate
 
-
     def derecha(self, animate):
-        animate += Animation(animated_color=(0,0,1) )
-        animate += Animation( size_hint_x = 0.7, duration=self.time_trial//2 )
-        animate += Animation( size_hint_x = 0, duration=self.time_trial//2 )
+        animate += Animation(animated_color=(0,0,1), duration=0)
+        #animate += Animation( size_hint_x = 0.7, duration=self.time_trial//2 )
+        animate += Animation( size_hint_x = 0.7, duration=4 )
+        animate += Animation( size_hint_x = 0, duration=4 )
         return animate
     
     def izquierda(self, animate):
-        animate += Animation(animated_color=(1,0,0) )
-        animate += Animation( size_hint_x = -0.7, duration=self.time_trial//2 )
-        animate += Animation( size_hint_x = 0, duration=self.time_trial//2 )
+        animate += Animation(animated_color=(1,0,0), duration=0)
+        animate += Animation( size_hint_x = -0.7, duration=4 )
+        animate += Animation( size_hint_x = 0, duration=4 )
         return animate
     
     def pausa(self, animate):
         animate += Animation(animated_color=(0,0,1), duration=self.time_pause)
-        print("pausa: ", self.time_pause)
+        #animate.start(in_widget)
+        #print("pausa: ", self.time_pause)
         #time beep
         #os.system('play -nq -t alsa synth {} sine {}'.format(1, 440)) #beep
         return animate
-
 
 class WindowManager(ScreenManager):
     pass

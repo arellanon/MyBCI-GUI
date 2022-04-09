@@ -75,7 +75,7 @@ class LabelTime (threading.Thread):
         return labels
             
 class DataThread (threading.Thread):
-    def __init__ (self, board, board_id, path):
+    def __init__ (self, board, board_id, stack, time, path):
         threading.Thread.__init__ (self)
         self.eeg_channels = BoardShim.get_eeg_channels(board_id)
         self.sampling_rate = BoardShim.get_sampling_rate(board_id)
@@ -83,29 +83,46 @@ class DataThread (threading.Thread):
         self.labels = None
         self.board = board
         self.path = path
+        self.stack = stack
+        self.sleep_time = time
         print(path)
     
     def run (self):
-        sleep_time = 1
+        #sleep_time = 1
         count=1
         total_data = None
         posiciones = None
+        labels=None
+        #self.stack = self.stack.reverse()
+        print("stack: ", self.stack)
         while self.keep_alive:
-            time.sleep(sleep_time)
+            if self.stack != [] :
+                x = self.stack.pop()
+                ts = time.time()
+                print(x, ' ', ts, ' - ', datetime.fromtimestamp(ts))
+                label=np.array( [ [ts], [x] ] )
+                if labels is None:
+                    labels = label
+                else:
+                    labels = np.append(labels, label, axis=1)
+                
+            time.sleep(self.sleep_time)
             data = self.board.get_board_data()
             count=count+1
             if total_data is None:
                 total_data = data                
             else:
                 total_data = np.append(total_data, data, axis=1)
-        #print(count, ': Data Shape ', total_data.shape, ' timestamp: ', datetime.fromtimestamp(total_data[22][0]) )
+            print(count, ': Data Shape ', total_data.shape, ' timestamp: ', datetime.fromtimestamp(total_data[22][0]) )
                
-        """
+        
         #Seleccionamos lista de timestamps
         lista_ts = total_data[22, :]
-
+        
+        labels = labels.transpose() 
+        print(labels)
         #Recuperamos los labels desde el main()
-        labels=self.labels
+        #labels=self.labels
         #Buscamos posicion del evento por proximidad ts
         for x in labels:
             resta = abs(lista_ts - x[0])
@@ -115,27 +132,32 @@ class DataThread (threading.Thread):
             else:
                 posiciones = np.append(posiciones, pos)
                 
+        
         #Con las posiciones creamos matriz de eventos pos x zero x event
         events = np.zeros((len(labels) , 3), int)
         events[:, 0] = posiciones.astype(int)
         events[:, 2] = labels[:,1].astype(int)
-        """
+        print(labels)
+        print(events)
+        
+        
         print("keep_alive: ", self.keep_alive)
         print("--Fin--")
         #Seleccionamos los canales egg        
         data = total_data[1:9, :]
         #Guardamos los datos crudos
-        #np.save(self.path + '/data.npy', data)
-        #np.save(self.path + '/events.npy', events)
-        #np.save(self.path + '/total_data.npy', total_data)
-        #np.save(self.path + '/lista_ts.npy', lista_ts)
-        #np.save(self.path + '/labels.npy', labels)
+        np.save(self.path + '/data.npy', data)
+        np.save(self.path + '/events.npy', events)
+        np.save(self.path + '/total_data.npy', total_data)
+        np.save(self.path + '/lista_ts.npy', lista_ts)
+        np.save(self.path + '/labels.npy', labels)
         raw = loadDatos(data, 'ch_names.txt')
         raw.pick_channels(['P3', 'P4', 'C3', 'C4','P7', 'P8', 'O1', 'O2'])        
         #Seteamos la ubicacion de los canales segun el 
         montage = make_standard_montage('standard_1020')
         raw.set_montage(montage)
         raw.save("raw_eeg.fif", overwrite=True)
+        mne.write_events("raw_eeg-eve.fif", events)
         print("chau!!!")
 
 
@@ -151,13 +173,13 @@ class StartCalibracionWindow(Screen):
 
     def on_recording(self):
         print("--on_recoring--")
-        label = LabelTime(self.stack, self.time_trial)
-        label.start()
-        ret=label.join()
-        print(ret)
-        """
+        #label = LabelTime(self.stack, self.time_trial)
+        #label.start()
+        #ret=label.join()
+        #print(ret)
+        
         #Calculamos name del directorio nuevo.
-        path='DATA/T4'
+        path='DATA/T5'
         #Creamos directorio
         os.makedirs(path, exist_ok=True)
         
@@ -170,18 +192,15 @@ class StartCalibracionWindow(Screen):
         self.board = BoardShim(board_id, params)
         self.board.prepare_session()
         self.board.start_stream()        
-        self.data_thead = DataThread(self.board, board_id, path)
+        self.data_thead = DataThread(self.board, board_id, self.stack, self.time_trial, path)
         self.data_thead.start()
-        """
     
     def on_stopping(self):
         print("--on_stopping--")
-        """
         self.data_thead.keep_alive = False
         self.data_thead.join()
         self.board.stop_stream()
         self.board.release_session()
-        """
 
     def on_rigth(self):
         print("--on_rigth--")                

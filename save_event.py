@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Mar 14 16:22:49 2021
+Created on Sat Apr  9 12:33:48 2022
 
 @author: nahuel
 """
@@ -31,25 +31,37 @@ from libb import *
 def main():   
     low_freq, high_freq = 7., 30.
     
-    raw = mne.io.read_raw_fif("raw_eeg.fif")
+    path = 'DATA/T4/'
     
-    #sample_data_events_file = os.path.join(sample_data_folder, 'MEG', 'sample','sample_audvis_raw-eve.fif')
-    events_from_file = mne.read_events("raw_eeg-eve.fif")
-    print(events_from_file)
+    #Se carga set de datos crudos
+    #data = np.load(path + '/data.npy')
+    #Data Señal
+    data = np.load(path + '/data.npy')
+    #data = data.transpose()
+    print("data: ", data.shape)
+    
+    #Se carga la matriz de eventos
+    events= np.load(path +'/events.npy')
+    print(events)
+    
+    raw = loadDatos(data, 'ch_names.txt')
     
     
     #Seleccionamos los canales a utilizar
-    #raw.pick_channels(['P3', 'P4', 'C3', 'C4','P7', 'P8', 'O1', 'O2'])
+    raw.pick_channels(['P3', 'P4', 'C3', 'C4','P7', 'P8', 'O1', 'O2'])
     #print('raw select: ', raw.shape)
     
     #Seteamos la ubicacion de los canales segun el 
-    #montage = make_standard_montage('standard_1020')
-    #raw.set_montage(montage)
+    montage = make_standard_montage('standard_1020')
+    raw.set_montage(montage)
     
     #raw.plot(scalings='auto', n_channels=8, duration=20)
     #raw.plot(scalings='auto', n_channels=1, events=events)
-    raw.plot(scalings='auto', n_channels=1, events = events_from_file)
-    #raw.plot(scalings='auto', n_channels=1)
+    raw.plot(scalings='auto', n_channels=1)
+    # Se aplica filtros band-pass
+    #raw.filter(low_freq, high_freq, fir_design='firwin', skip_by_annotation='edge')
+    raw.save("eeg.fif", overwrite=True)
+    mne.write_events("event.fif", events)
     
 if __name__ == "__main__":
     main()

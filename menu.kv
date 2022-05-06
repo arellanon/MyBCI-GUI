@@ -5,6 +5,7 @@ WindowManager:
     RealtimeWindow:
     ConfiguracionCalibracionWindow:
     StartCalibracionWindow:
+    ConfiguracionMachineLearningWindow:
 
 <MenuWindow>:
     name: "menu"
@@ -134,13 +135,41 @@ WindowManager:
             font_size: 32
             
         Button:
+            text: "Configuracion"
+            font_size: 32
+            on_release:
+                app.root.current = "configuracion_ml"
+                root.manager.transition.direction = "left"
+        Button:
+            text: "Start"
+            font_size: 32
+            on_release: root.start_train(self)
+            
+        Button:
             text: "Volver"
             font_size: 32
             on_release:
                 app.root.current = "menu"
                 root.manager.transition.direction = "right"
                 
-                
+<ConfiguracionMachineLearningWindow>:
+    name: "configuracion_ml"
+    
+    BoxLayout:
+        orientation: "vertical"
+        size: root.width, root.height
+        
+        Label:
+            text: "Configuracion Machine Learning"
+            font_size: 32            
+            
+        Button:
+            text: "Volver"
+            font_size: 32
+            on_release:
+                app.root.current = "machine_learning"
+                root.manager.transition.direction = "right"
+
 <RealtimeWindow>:
     name: "realtime"
     

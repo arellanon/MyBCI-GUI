@@ -11,18 +11,23 @@ from kivy.uix.widget import Widget
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.animation import Animation
-import os
-from libb import *
-from datetime import datetime
+from brainflow.board_shim import BoardShim, BrainFlowInputParams, LogLevels, BoardIds
+from brainflow.data_filter import DataFilter, FilterTypes, AggOperations
+from DataThread import *
+from TrainML import *
 
 """
 DataThread
-"""
+
 import threading
 import time
 import numpy as np
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, LogLevels, BoardIds
 from brainflow.data_filter import DataFilter, FilterTypes, AggOperations
+import os
+from libb import *
+from datetime import datetime
+"""
 
 def reset():
     import kivy.core.window as window
@@ -42,6 +47,13 @@ class CalibracionWindow(Screen):
     pass
 
 class MachineLearningWindow(Screen):
+    
+    def start_train(self, *args):
+        print("test!")
+        train = TrainML()
+        train.run()
+
+class ConfiguracionMachineLearningWindow(Screen):
     pass
 
 class RealtimeWindow(Screen):
@@ -49,90 +61,11 @@ class RealtimeWindow(Screen):
 
 class ConfiguracionCalibracionWindow(Screen):
     pass
-            
-class DataThread (threading.Thread):
-    def __init__ (self, board, board_id, config):
-        threading.Thread.__init__ (self)
-        self.eeg_channels = BoardShim.get_eeg_channels(board_id)
-        self.sampling_rate = BoardShim.get_sampling_rate(board_id)
-        self.keep_alive = True
-        self.labels = None
-        self.board = board
-        self.path = config['path']
-        self.total_stack = config['total_stack']
-        self.sleep_time = config['time_trial']
-    
-    def run (self):
-        #sleep_time = 1
-        count=1
-        total_data = np.ndarray(shape=(24, 0))
-        labels = np.ndarray(shape=(2, 0))
-        posiciones = np.array( [] )
-        #self.stack = self.stack.reverse()
-        print("stack: ", self.total_stack)
-        while self.keep_alive:
-            if self.total_stack != []:
-                stack = self.total_stack.pop()
-                #for stack in self.total_stack:
-                for x in stack:
-                    #x = stack.pop()
-                    ts = time.time()
-                    print(x, ' ', ts, ' - ', datetime.fromtimestamp(ts))
-                    label=np.array( [ [ts], [x] ] )
-                    labels = np.append(labels, label, axis=1)
-                
-                    time.sleep(self.sleep_time)
-                    data = self.board.get_board_data()
-                    count=count+1
-                    total_data = np.append(total_data, data, axis=1)
-                    print(count, ': Data Shape ', total_data.shape, ' timestamp: ', datetime.fromtimestamp(total_data[22][0]) )
-               
-        print(total_data.shape)
-        #Seleccionamos lista de timestamps
-        lista_ts = total_data[22, :]
-        
-        labels = labels.transpose() 
-        print(labels)
-        #Recuperamos los labels desde el main()
-        #labels=self.labels
-        #Buscamos posicion del evento por proximidad ts
-        for x in labels:
-            resta = abs(lista_ts - x[0])
-            pos = np.where(min(resta) == resta)[0]
-            posiciones = np.append(posiciones, pos)
-        
-        print(posiciones.shape)
-        #Con las posiciones creamos matriz de eventos pos x zero x event
-        events = np.zeros((len(labels) , 3), int)
-        events[:, 0] = posiciones.astype(int)
-        events[:, 2] = labels[:,1].astype(int)
-        print(labels)
-        print(events)
-        
-        
-        print("keep_alive: ", self.keep_alive)
-        print("--Fin--")
-        #Seleccionamos los canales egg        
-        data = total_data[1:9, :]
-        #Guardamos los datos crudos
-        np.save(self.path + '/data.npy', data)
-        np.save(self.path + '/events.npy', events)
-        np.save(self.path + '/total_data.npy', total_data)
-        np.save(self.path + '/lista_ts.npy', lista_ts)
-        np.save(self.path + '/labels.npy', labels)
-        raw = loadDatos(data, 'ch_names.txt')
-        raw.pick_channels(['P3', 'P4', 'C3', 'C4','P7', 'P8', 'O1', 'O2'])        
-        #Seteamos la ubicacion de los canales segun el 
-        montage = make_standard_montage('standard_1020')
-        raw.set_montage(montage)
-        raw.save("raw_eeg.fif", overwrite=True)
-        mne.write_events("raw_eeg-eve.fif", events)
-        print("chau!!!")
 
 class StartCalibracionWindow(Screen):
             
     def animate_it(self, *args):
-        self.config = {'time_trial': 8, 'run_n': 1, 'trial_per_run': 4, 'time_pause': 10, 'path': 'DATA/T5'}
+        self.config = {'time_initial': 5, 'time_trial': 8, 'run_n': 4, 'trial_per_run': 8, 'time_pause': 10, 'path': 'DATA/T8'}
         self.calculate_stack()
         print(self.config)
         animate = self.my_animation(self.ids.bar)
@@ -141,11 +74,7 @@ class StartCalibracionWindow(Screen):
         animate.start(self.ids.bar)
                 
     def on_recording(self):
-        print("--on_recoring--")      
-        #Calculamos name del directorio nuevo.
-        #path='DATA/T5'
-        #Creamos directorio
-        #os.makedirs(path, exist_ok=True)        
+        print("--on_recoring--")          
         BoardShim.enable_board_logger()
     
         params = BrainFlowInputParams()
@@ -163,11 +92,13 @@ class StartCalibracionWindow(Screen):
         self.data_thead.keep_alive = False
         self.data_thead.join()
         self.board.stop_stream()
-        self.board.release_session()   
+        self.board.release_session()
         
     def my_animation(self, in_widget, *args):        
         total_stack = self.config['total_stack']
-        animate = Animation(duration=0)        
+        time_initial = self.config['time_initial']
+        
+        animate = Animation(duration=time_initial)
         for stack in total_stack:
             for x in stack:
                 if x == 0:
@@ -180,7 +111,6 @@ class StartCalibracionWindow(Screen):
     def derecha(self, animate):
         time_trial = self.config['time_trial']        
         animate += Animation(animated_color=(0,0,1), duration=0)
-        #animate += Animation( size_hint_x = 0.7, duration=self.time_trial//2 )
         animate += Animation( size_hint_x = 0.7, duration=time_trial//2 )
         animate += Animation( size_hint_x = 0, duration=time_trial//2 )
         return animate
@@ -194,6 +124,7 @@ class StartCalibracionWindow(Screen):
     
     def pausa(self, animate):
         time_pause= self.config['time_pause']
+        #time_pause+=1
         animate += Animation(animated_color=(0,0,1), duration=time_pause)
         #animate.start(in_widget)
         #print("pausa: ", self.time_pause)

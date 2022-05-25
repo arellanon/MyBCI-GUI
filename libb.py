@@ -13,6 +13,7 @@ Created on Sat Mar 20 20:39:10 2021
 @author: nahuel
 """
 import os
+import configparser
 from os import listdir
 from os.path import isfile, isdir
 
@@ -63,6 +64,25 @@ def loadDatos(data_cnt, ch_name_file):
         ch_names[i]=ch_names[i].strip()
     info = mne.create_info(ch_names, freq, 'eeg')
     raw = mne.io.RawArray(data_cnt, info, first_samp=0, copy='auto', verbose=None)
-    print(info)
-    
+    print(info)    
     return raw
+
+def saveConfig(filename, section, configData):
+    config = configparser.ConfigParser()
+    config.read(filename)
+    config[section] = configData
+    #print(type(a))
+    with open(filename, 'w') as configfile:
+        config.write(configfile)
+
+def loadConfig(filename, section):
+    config = configparser.ConfigParser()
+    config.read(filename)
+    calibration = config[section]
+    configData = {}
+    for key, value in calibration.items():
+        if key == 'path':
+            configData[key] = value
+        else:
+            configData[key] = int(value)
+    return configData

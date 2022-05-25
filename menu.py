@@ -60,13 +60,25 @@ class RealtimeWindow(Screen):
     pass
 
 class ConfiguracionCalibracionWindow(Screen):
-    pass
+    
+    def save_it(self, *arg):
+        a = {}
+        a['time_initial']= int(self.ids.time_initial.text)
+        a['time_trial']= int(self.ids.time_trial.text)
+        a['run_n']= int(self.ids.run_n.text)
+        a['trial_per_run']= int(self.ids.trial_per_run.text)
+        a['time_pause']= int(self.ids.time_pause.text)
+        a['path']= self.ids.path.text
+        print(a)
+        saveConfig("config.ini", 'CALIBRATION', a)
 
 class StartCalibracionWindow(Screen):
             
     def animate_it(self, *args):
-        self.config = {'time_initial': 5, 'time_trial': 8, 'run_n': 4, 'trial_per_run': 8, 'time_pause': 10, 'path': 'DATA/T8'}
-        self.calculate_stack()
+        config_calibration = loadConfig("config.ini", "CALIBRATION")
+        #self.config = {'time_initial': 5, 'time_trial': 8, 'run_n': 1, 'trial_per_run': 10, 'time_pause': 10, 'path': 'DATA/T11'}
+        self.config = config_calibration
+        self.total_stack = self.calculate_stack()
         print(self.config)
         animate = self.my_animation(self.ids.bar)
         animate.bind(on_start=lambda x,y:self.on_recording(),
@@ -74,7 +86,7 @@ class StartCalibracionWindow(Screen):
         animate.start(self.ids.bar)
                 
     def on_recording(self):
-        print("--on_recoring--")          
+        print("--on_recoring--")
         BoardShim.enable_board_logger()
     
         params = BrainFlowInputParams()
@@ -84,7 +96,7 @@ class StartCalibracionWindow(Screen):
         self.board = BoardShim(board_id, params)
         self.board.prepare_session()
         self.board.start_stream()
-        self.data_thead = DataThread(self.board, board_id, self.config)
+        self.data_thead = DataThread(self.board, board_id, self.config, self.total_stack)
         self.data_thead.start()
     
     def on_stopping(self):
@@ -95,7 +107,8 @@ class StartCalibracionWindow(Screen):
         self.board.release_session()
         
     def my_animation(self, in_widget, *args):        
-        total_stack = self.config['total_stack']
+        #total_stack = self.config['total_stack']
+        total_stack = self.total_stack
         time_initial = self.config['time_initial']
         
         animate = Animation(duration=time_initial)
@@ -144,7 +157,7 @@ class StartCalibracionWindow(Screen):
             stack = left + rigth
             random.shuffle(stack)
             total_stack.append(stack)
-        self.config['total_stack'] = total_stack
+        return total_stack
 
 class WindowManager(ScreenManager):
     pass

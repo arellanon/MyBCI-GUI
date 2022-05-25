@@ -70,25 +70,63 @@ WindowManager:
                 app.root.current = "menu"
                 root.manager.transition.direction = "right"
 
-
 <ConfiguracionCalibracionWindow>:
     name: "configuracion_calibracion"
-    
-    BoxLayout:
-        orientation: "vertical"
-        size: root.width, root.height
-        
-        Label:
-            text: "Configuracion Calibracion"
-            font_size: 32            
-            
-        Button:
-            text: "Volver"
-            font_size: 32
-            on_release:
-                app.root.current = "calibracion"
-                root.manager.transition.direction = "right"
-                
+    orientation: 'vertical'
+  
+    FloatLayout:
+        id: widConfig
+        GridLayout:
+            cols: 2
+            Label:
+                text: "time_initial: "
+                background_color: (1,1,0,1)
+            TextInput:
+                id: time_initial
+                multiline: False
+            Label:
+                text: "time_trial: "
+                background_color: (1,1,0,1)
+            TextInput:
+                id: time_trial
+                multiline: False
+            Label:
+                text: "run_n: "
+                background_color: (1,1,0,1)
+            TextInput:
+                id: run_n
+                multiline: False
+            Label:
+                text: "trial_per_run: "
+                background_color: (1,1,0,1)
+            TextInput:
+                id: trial_per_run
+                multiline: False
+            Label:
+                text: "time_pause: "
+                background_color: (1,1,0,1)
+            TextInput:
+                id: time_pause
+                multiline: False                     
+            Label:
+                text: "path: "
+                background_color: (1,1,0,1)
+            TextInput:
+                id: path
+                multiline: False                    
+            Button:
+                text: "Save"
+                font_size: 32
+                size: self.size
+                pos: self.pos
+                on_release: root.save_it(self)
+            Button:
+                text: "Volver"
+                font_size: 32
+                on_release:
+                    app.root.current = "calibracion"
+                    root.manager.transition.direction = "right"         
+
                 
 <StartCalibracionWindow>:
     name: "start_calibracion"             

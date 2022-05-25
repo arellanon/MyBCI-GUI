@@ -18,12 +18,12 @@ from libb import *
 from datetime import datetime
 
 class DataThread (threading.Thread):
-    def __init__ (self, board, board_id, config):
+    def __init__ (self, board, board_id, config, total_stack):
         threading.Thread.__init__ (self)
         self.eeg_channels = BoardShim.get_eeg_channels(board_id)
         self.sampling_rate = BoardShim.get_sampling_rate(board_id)
+        self.total_stack = total_stack
         self.path = config['path']
-        self.total_stack = config['total_stack']
         self.time_trial = config['time_trial']
         self.time_pause= config['time_pause']
         self.time_initial = config['time_initial']
@@ -34,7 +34,8 @@ class DataThread (threading.Thread):
    
     def run(self):
         print("stack: ", self.total_stack)
-        self.getData(self.time_initial)
+        delta = 0
+        delta = self.getData(self.time_initial, delta)
         while self.keep_alive:
             if self.total_stack != []:
                 stack = self.total_stack.pop(0)
@@ -44,10 +45,10 @@ class DataThread (threading.Thread):
                     print(x, ' ', ts, ' - ', datetime.fromtimestamp(ts))
                     label=np.array( [ [ts], [x] ] )
                     self.labels = np.append(self.labels, label, axis=1)
-                    self.getData(self.time_trial)
-                self.getData(self.time_pause)
+                    delta = self.getData(self.time_trial, delta)
+                delta = self.getData(self.time_pause, delta)
             else:
-                self.getData(1)
+                delta = self.getData(1, 0)
         #calculamos los eventos
         events = self.getEvent()
         #Seleccionamos los canales eeg        
@@ -56,15 +57,22 @@ class DataThread (threading.Thread):
         self.save(data_eeg, events)
         print("--Fin--")
         
-    def getData(self, ts):
+    def getData(self, ts, delta):
         start_time = time.time()
-        for i in range(ts):
-            time.sleep(0.994)
+        #total_delta = 0
+        #delta = 0
+        for i in range(1, ts+1):
+            print(i, ": delta: ", delta)
+            #start_ts = time.time()
+            time.sleep(1 - delta)
             data = self.board.get_board_data()
             self.total_data = np.append(self.total_data, data, axis=1)
+            delta = (time.time() - start_time ) - ( 1 * i)
+            #total_delta += delta
             #print(i,': data shape ', data.shape, ' - total_data shape ', self.total_data.shape, ' timestamp: ', datetime.fromtimestamp(data[22][0]) )
         elapsed_time = time.time() - start_time
-        print("Elapsed time: %0.10f seconds." % elapsed_time)
+        print("Elapsed time: %0.10f seconds." % elapsed_time, " delta: %0.10f" % delta)
+        return delta
         
     def getEvent(self):
         posiciones = np.array( [] )

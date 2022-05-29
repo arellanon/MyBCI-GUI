@@ -15,6 +15,7 @@ from brainflow.board_shim import BoardShim, BrainFlowInputParams, LogLevels, Boa
 from brainflow.data_filter import DataFilter, FilterTypes, AggOperations
 from DataThread import *
 from TrainML import *
+from kivy.properties import StringProperty
 
 """
 DataThread
@@ -54,23 +55,48 @@ class MachineLearningWindow(Screen):
         train.run()
 
 class ConfiguracionMachineLearningWindow(Screen):
-    pass
+    def load_it(self, *arg):
+        config_train_ml = loadConfig("config.ini", "TRAIN_ML")
+        self.ids.tmin.text = str(config_train_ml['tmin'])
+        self.ids.tmax.text = str(config_train_ml['tmax'])
+        self.ids.path.text = config_train_ml['path']
+        
+    def save_it(self, *arg):
+        config_train_ml = {}
+        config_train_ml['tmin'] = self.ids.tmin.text
+        config_train_ml['tmax'] = self.ids.tmax.text
+        config_train_ml['path'] = self.ids.path.text
+        print(config_train_ml)
+        saveConfig("config.ini", 'TRAIN_ML', config_train_ml)
 
 class RealtimeWindow(Screen):
     pass
 
 class ConfiguracionCalibracionWindow(Screen):
-    
+    #config_calibration = loadConfig("config.ini", "CALIBRATION")
+    def __init__(self, **kwargs):
+        super(ConfiguracionCalibracionWindow, self).__init__(**kwargs)
+        print(self.ids)
+        
+    def load_it(self, *arg):
+        config_calibration = loadConfig("config.ini", "CALIBRATION")
+        self.ids.time_initial.text = str(config_calibration['time_initial'])
+        self.ids.time_trial.text = str(config_calibration['time_trial'])
+        self.ids.run_n.text = str(config_calibration['run_n'])
+        self.ids.trial_per_run.text = str(config_calibration['trial_per_run'])
+        self.ids.time_pause.text = str(config_calibration['time_pause'])
+        self.ids.path.text = config_calibration['path']
+        
     def save_it(self, *arg):
-        a = {}
-        a['time_initial']= int(self.ids.time_initial.text)
-        a['time_trial']= int(self.ids.time_trial.text)
-        a['run_n']= int(self.ids.run_n.text)
-        a['trial_per_run']= int(self.ids.trial_per_run.text)
-        a['time_pause']= int(self.ids.time_pause.text)
-        a['path']= self.ids.path.text
-        print(a)
-        saveConfig("config.ini", 'CALIBRATION', a)
+        config_calibration = {}
+        config_calibration['time_initial']= int(self.ids.time_initial.text)
+        config_calibration['time_trial']= int(self.ids.time_trial.text)
+        config_calibration['run_n']= int(self.ids.run_n.text)
+        config_calibration['trial_per_run']= int(self.ids.trial_per_run.text)
+        config_calibration['time_pause']= int(self.ids.time_pause.text)
+        config_calibration['path']= self.ids.path.text
+        print(config_calibration)
+        saveConfig("config.ini", 'CALIBRATION', config_calibration)
 
 class StartCalibracionWindow(Screen):
             
@@ -81,8 +107,8 @@ class StartCalibracionWindow(Screen):
         self.total_stack = self.calculate_stack()
         print(self.config)
         animate = self.my_animation(self.ids.bar)
-        animate.bind(on_start=lambda x,y:self.on_recording(),
-                     on_complete=lambda x,y:self.on_stopping() )
+#        animate.bind(on_start=lambda x,y:self.on_recording(),
+#                     on_complete=lambda x,y:self.on_stopping() )
         animate.start(self.ids.bar)
                 
     def on_recording(self):
@@ -109,7 +135,8 @@ class StartCalibracionWindow(Screen):
     def my_animation(self, in_widget, *args):        
         #total_stack = self.config['total_stack']
         total_stack = self.total_stack
-        time_initial = self.config['time_initial']
+        #time_initial = self.config['time_initial']
+        time_initial = 0
         
         animate = Animation(duration=time_initial)
         for stack in total_stack:
@@ -168,7 +195,7 @@ kv = Builder.load_file('menu.kv')
 class AwesomeApp(App):
     def build(self):
         return kv
-    
+
 if __name__ == '__main__':
     reset()
     AwesomeApp().run()

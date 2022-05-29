@@ -80,9 +80,13 @@ def loadConfig(filename, section):
     config.read(filename)
     calibration = config[section]
     configData = {}
-    for key, value in calibration.items():
+    for key, value in calibration.items():            
         if key == 'path':
             configData[key] = value
+        elif key == 'tmin':
+            configData[key] = float(value)
+        elif key == 'tmax':
+            configData[key] = float(value)
         else:
             configData[key] = int(value)
     return configData

@@ -33,11 +33,14 @@ from libb import *
 class TrainML:
 
     def run(self):
-        
-        path = "DATA/T11/"
+        config_train_ml = loadConfig("config.ini", "TRAIN_ML")
+        path = config_train_ml['path']
+        tmin = config_train_ml['tmin']
+        tmax = config_train_ml['tmax']
         
         low_freq, high_freq = 7., 30.
-        tmin, tmax = 0.5, 1.5
+        print("tmin: ",tmin," - tmax: ", tmax )
+    #    tmin, tmax = 0.5, 1.5
     #    tmin, tmax = 2, 4
         
         # event_id
@@ -73,10 +76,10 @@ class TrainML:
         print(type(events))
         """
 
-        raw = mne.io.read_raw_fif(path + "raw_eeg.fif")
+        raw = mne.io.read_raw_fif(path + "/raw_eeg.fif")
     
         #sample_data_events_file = os.path.join(sample_data_folder, 'MEG', 'sample','sample_audvis_raw-eve.fif')
-        events = mne.read_events(path + "raw_eeg-eve.fif")
+        events = mne.read_events(path + "/raw_eeg-eve.fif")
         
         print(type(raw))
         print(type(events))

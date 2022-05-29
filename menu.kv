@@ -83,6 +83,7 @@ WindowManager:
                 background_color: (1,1,0,1)
             TextInput:
                 id: time_initial
+                input_filter: "int"
                 multiline: False
             Label:
                 text: "time_trial: "
@@ -120,6 +121,12 @@ WindowManager:
                 size: self.size
                 pos: self.pos
                 on_release: root.save_it(self)
+            Button:
+                text: "Load"
+                font_size: 32
+                size: self.size
+                pos: self.pos
+                on_release: root.load_it(self)                
             Button:
                 text: "Volver"
                 font_size: 32
@@ -163,15 +170,12 @@ WindowManager:
                 
 <MachineLearningWindow>:
     name: "machine_learning"
-    
     BoxLayout:
         orientation: "vertical"
         size: root.width, root.height
-        
         Label:
             text: "Machine Learning"
             font_size: 32
-            
         Button:
             text: "Configuracion"
             font_size: 32
@@ -192,21 +196,48 @@ WindowManager:
                 
 <ConfiguracionMachineLearningWindow>:
     name: "configuracion_ml"
-    
-    BoxLayout:
-        orientation: "vertical"
-        size: root.width, root.height
-        
-        Label:
-            text: "Configuracion Machine Learning"
-            font_size: 32            
-            
-        Button:
-            text: "Volver"
-            font_size: 32
-            on_release:
-                app.root.current = "machine_learning"
-                root.manager.transition.direction = "right"
+    FloatLayout:
+        id: wtrain_ml
+        GridLayout:
+            cols: 2
+            Label:
+                text: "tmin: "
+                background_color: (1,1,0,1)
+            TextInput:
+                id: tmin
+                input_filter: "float"
+                multiline: False
+            Label:
+                text: "tmax: "
+                background_color: (1,1,0,1)
+            TextInput:
+                id: tmax
+                input_filter: "float"
+                multiline: False
+            Label:
+                text: "path: "
+                background_color: (1,1,0,1)
+            TextInput:
+                id: path
+                multiline: False                    
+            Button:
+                text: "Save"
+                font_size: 32
+                size: self.size
+                pos: self.pos
+                on_release: root.save_it(self)
+            Button:
+                text: "Load"
+                font_size: 32
+                size: self.size
+                pos: self.pos
+                on_release: root.load_it(self)
+            Button:
+                text: "Volver"
+                font_size: 32
+                on_release:
+                    app.root.current = "machine_learning"
+                    root.manager.transition.direction = "right"         
 
 <RealtimeWindow>:
     name: "realtime"

@@ -107,8 +107,8 @@ class StartCalibracionWindow(Screen):
         self.total_stack = self.calculate_stack()
         print(self.config)
         animate = self.my_animation(self.ids.bar)
-#        animate.bind(on_start=lambda x,y:self.on_recording(),
-#                     on_complete=lambda x,y:self.on_stopping() )
+        animate.bind(on_start=lambda x,y:self.on_recording(),
+                     on_complete=lambda x,y:self.on_stopping() )
         animate.start(self.ids.bar)
                 
     def on_recording(self):
@@ -135,8 +135,8 @@ class StartCalibracionWindow(Screen):
     def my_animation(self, in_widget, *args):        
         #total_stack = self.config['total_stack']
         total_stack = self.total_stack
-        #time_initial = self.config['time_initial']
-        time_initial = 0
+        time_initial = self.config['time_initial']
+        #time_initial = 0
         
         animate = Animation(duration=time_initial)
         for stack in total_stack:

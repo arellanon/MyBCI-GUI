@@ -63,8 +63,8 @@ def loadDatos(data_cnt, ch_name_file):
     for i in range(len(ch_names)):
         ch_names[i]=ch_names[i].strip()
     info = mne.create_info(ch_names, freq, 'eeg')
-    raw = mne.io.RawArray(data_cnt, info, first_samp=0, copy='auto', verbose=None)
-    print(info)    
+    raw = mne.io.RawArray(data_cnt, info, first_samp=0, copy='auto', verbose='critical')
+    #print(info)    
     return raw
 
 def saveConfig(filename, section, configData):

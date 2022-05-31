@@ -31,16 +31,16 @@ from libb import *
 def main():   
     low_freq, high_freq = 7., 30.
     
-    path = "DATA/T15/"
-    raw = mne.io.read_raw_fif(path + "raw_eeg.fif")
+    path = "DATA/T17/"
+    raw = mne.io.read_raw_fif(path + "raw_eeg.fif", preload=True)
     
     #sample_data_events_file = os.path.join(sample_data_folder, 'MEG', 'sample','sample_audvis_raw-eve.fif')
-    events_from_file = mne.read_events(path + "raw_eeg-eve.fif")
+    events_from_file = mne.read_events(path + "raw_eeg-eve.fif",)
     print(type(raw))
     print(type(events_from_file))
     print(events_from_file)
     
-    
+    raw.filter(low_freq, high_freq, fir_design='firwin', skip_by_annotation='edge')
     #Seleccionamos los canales a utilizar
     #raw.pick_channels(['P3', 'P4', 'C3', 'C4','P7', 'P8', 'O1', 'O2'])
     #print('raw select: ', raw.shape)

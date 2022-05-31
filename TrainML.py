@@ -45,7 +45,6 @@ class TrainML:
         
         # event_id
         event_id = {'right': 1, 'left': 0}
-        
         acurracy = []
         """        
         path_raiz = 'DATA/'
@@ -75,8 +74,8 @@ class TrainML:
         print(type(raw))
         print(type(events))
         """
-
-        raw = mne.io.read_raw_fif(path + "/raw_eeg.fif")
+        raw = mne.io.read_raw_fif(path + "/raw_eeg.fif", preload=True)
+        raw.filter(low_freq, high_freq, fir_design='firwin', skip_by_annotation='edge')
     
         #sample_data_events_file = os.path.join(sample_data_folder, 'MEG', 'sample','sample_audvis_raw-eve.fif')
         events = mne.read_events(path + "/raw_eeg-eve.fif")

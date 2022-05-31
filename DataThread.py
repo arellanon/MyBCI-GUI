@@ -29,7 +29,8 @@ class DataThread (threading.Thread):
         self.time_initial = config['time_initial']
         self.keep_alive = True
         self.labels = np.ndarray(shape=(2, 0))
-        self.total_data = np.ndarray(shape=(23, 0))
+        #self.total_data = np.ndarray(shape=(23, 0))  ##Windows
+        self.total_data = np.ndarray(shape=(24, 0))   ##Linux
         self.board = board
    
     def run(self):
